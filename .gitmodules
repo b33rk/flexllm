@@ -1,6 +1,7 @@
 [submodule "flexflow-serve"]
 	path = flexflow-serve
 	url = https://github.com/b33rk/flexflow-serve
+	branch = b33rk-adaptive-pruning
 [submodule "LLaMA-Factory"]
 	path = LLaMA-Factory
 	url = https://github.com/goliaro/LLaMA-Factory.git
