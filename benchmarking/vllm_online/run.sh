@@ -9,21 +9,9 @@ SCRIPT_DIR=$(pwd)
 
 VLLM_V1=1
 EAGER_MODE=true
-MODEL_NAMES=(
-  "meta-llama/Llama-3.1-8B-Instruct"
-  "Qwen/Qwen2.5-14B-Instruct"
-  "Qwen/Qwen2.5-32B-Instruct"
-)
-TP_DEGREES=(
-  1
-  2
-  4
-)
-model_types=(
-  "llama"
-  "qwen"
-  "qwen"
-)
+MODEL_NAMES=("meta-llama/Llama-3.1-8B-Instruct")
+TP_DEGREES=(1)
+model_types=("llama")
 QPS_vals=(
   6.7 # 20/3
   5.3 # 16/3

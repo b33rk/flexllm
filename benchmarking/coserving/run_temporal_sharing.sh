@@ -26,16 +26,12 @@ PEFT_SUPPORT_MODE="TEMPORAL_SHARING"
 trace=sharegpt
 
 # --- arrays to sweep ---
-MODEL_NAMES=(
-  "meta-llama/Llama-3.1-8B-Instruct"
-  "Qwen/Qwen2.5-14B-Instruct"
-  "Qwen/Qwen2.5-32B-Instruct"
-)
-TP_DEGREES=(1 2 4)
-ZSIZES=(40000 40000 70000)
-NUM_BWD_LAYERS_vals=(-1 -1 -1)
-NUM_KV_CACHE_SLOTS_vals=(70000 70000 60000)
-model_types=(llama qwen qwen)
+MODEL_NAMES=("meta-llama/Llama-3.1-8B-Instruct")
+TP_DEGREES=(1)
+ZSIZES=(40000)
+NUM_BWD_LAYERS_vals=(-1)
+NUM_KV_CACHE_SLOTS_vals=(70000)
+model_types=("llama")
 QPS_vals=(5.0 4.0 3.0 2.0 1.0)
 TEMPORAL_SHARING_FREQUENCIES=(64 128 512)
 

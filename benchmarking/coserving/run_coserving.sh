@@ -14,16 +14,12 @@ cd "${BASH_SOURCE[0]%/*}/../../flexflow-serve/build"
 source ./set_python_envs.sh
 
 # Define the arrays from the original script
-MODEL_NAMES=(
-  "meta-llama/Llama-3.1-8B-Instruct"
-  "Qwen/Qwen2.5-14B-Instruct"
-  "Qwen/Qwen2.5-32B-Instruct"
-)
-TP_DEGREES=(1 2 4)
-ZSIZES=(40000 40000 70000)
-NUM_BWD_LAYERS_vals=(2 1 1)
-NUM_KV_CACHE_SLOTS_vals=(70000 70000 60000)
-model_types=("llama" "qwen" "qwen")
+MODEL_NAMES=("meta-llama/Llama-3.1-8B-Instruct")
+TP_DEGREES=(1)
+ZSIZES=(40000)
+NUM_BWD_LAYERS_vals=(2)
+NUM_KV_CACHE_SLOTS_vals=(70000)
+model_types=("llama")
 QPS_vals=(5.0 4.0 3.0 2.0 1.0)
 
 # Other parameters
@@ -126,7 +122,7 @@ run_experiment() {
     fi
 
     echo "========================================================================"
-    echo "Running experiment $((model_index * 5 + qps_index + 1))/15"
+    echo "Running experiment $((model_index * 5 + qps_index + 1))/5"
     echo "Model: $MODEL_NAME (tp=$NGPUS)"
     echo "Trace: $trace"
     echo "Parameters: BZ=$BATCH_SIZE, TOKENS_PER_BATCH=$MAX_TOKENS_PER_BATCH"
