@@ -166,15 +166,25 @@ def check_file_availability(data, models, tp_degrees, kv_cache_slots_values, qps
                 if "vllm" not in experiment_type and "llama-factory" not in experiment_type:
                     # Check FlexLLM inference files
                     num_warmups = 10 if "coserving" in experiment_type else 0
+                    
                     filepath = os.path.join(benchmark_result.directory, 
-                                          f"inference_request_profiling_sharegpt_8192_{qps}_qps_{model_}_tensor_parallelism_{tp_degree}_max_requests_per_batch_256_max_tokens_per_batch_256_num_kv_cache_slots_{kv_cache_slots}_qps_0.000000_num_warmup_requests_{num_warmups}.csv")
+                        f"inference_request_profiling_sharegpt_{model_}_tensor_parallelism_{tp_degree}_max_requests_per_batch_256_max_tokens_per_batch_256_num_kv_cache_slots_{kv_cache_slots}_qps_0.000000_num_warmup_requests_{num_warmups}.csv")
+                    print("filepath:", filepath)
+
+
+                    # filepath = os.path.join(benchmark_result.directory, 
+                    #                       f"inference_request_profiling_sharegpt_8192_{qps}_qps_{model_}_tensor_parallelism_{tp_degree}_max_requests_per_batch_256_max_tokens_per_batch_256_num_kv_cache_slots_{kv_cache_slots}_qps_0.000000_num_warmup_requests_{num_warmups}.csv")
                     total_files += 1
                     if not os.path.exists(filepath):
                         missing_files += 1
                     
                     # Check FlexLLM finetuning files
+                    # step_filepath = os.path.join(benchmark_result.directory, 
+                    #                            f"step_profiling_sharegpt_8192_{qps}_qps_{model_}_tensor_parallelism_{tp_degree}_max_requests_per_batch_256_max_tokens_per_batch_256_num_kv_cache_slots_{kv_cache_slots}_qps_0.000000_num_warmup_requests_{num_warmups}.csv")
                     step_filepath = os.path.join(benchmark_result.directory, 
-                                               f"step_profiling_sharegpt_8192_{qps}_qps_{model_}_tensor_parallelism_{tp_degree}_max_requests_per_batch_256_max_tokens_per_batch_256_num_kv_cache_slots_{kv_cache_slots}_qps_0.000000_num_warmup_requests_{num_warmups}.csv")
+                        f"step_profiling_sharegpt_{model_}_tensor_parallelism_{tp_degree}_max_requests_per_batch_256_max_tokens_per_batch_256_num_kv_cache_slots_{kv_cache_slots}_qps_0.000000_num_warmup_requests_{num_warmups}.csv")
+                    
+                    print("step_filepath:", step_filepath)
                     total_files += 1
                     if not os.path.exists(step_filepath):
                         missing_files += 1
@@ -231,14 +241,14 @@ def parse_benchmark_data():
     """Parse raw benchmark data from CSV and JSON files and save to pickle file."""
     
     # Configuration
-    models = ["meta-llama/Llama-3.1-8B-Instruct", "Qwen/Qwen2.5-14B-Instruct", "Qwen/Qwen2.5-32B-Instruct"]
-    llama_factory_model_names = ["t1_llama_8B/lora/sft", "t1_qwen_14B/lora/sft", "t1_qwen_32B/lora/sft"]
-    tp_degrees = [1, 2, 4]
-    kv_cache_slots_values = [70000, 70000, 60000]
-    qps_values = [1.0, 3.0, 5.0]
-    # qps_values = [1.0, 2.0, 3.0, 4.0, 5.0]
-    tpot_slos_ms = [45, 75, 75]
-    ttft_slos_ms = [5000, 5000, 5000]
+    models = ["meta-llama/Llama-3.1-8B-Instruct"]
+    llama_factory_model_names = ["t1_llama_8B/lora/sft"]
+    tp_degrees = [1]
+    kv_cache_slots_values = [70000]
+    # qps_values = [1.0, 3.0, 5.0]
+    qps_values = [1.0, 2.0, 3.0, 4.0, 5.0]
+    tpot_slos_ms = [75]
+    ttft_slos_ms = [5000]
 
     output_folder = "./output"
     save_path = os.path.join(output_folder, "benchmark_data.pkl")
@@ -251,9 +261,9 @@ def parse_benchmark_data():
     data = {
         "coserving": BenchmarkResult(directory="./output/e2e/coserving/profiling"),
         "spatial-sharing": BenchmarkResult(directory="./output/e2e/spatial_sharing/profiling"),
-        "temporal-sharing-64": BenchmarkResult(directory="./output/e2e/temporal_sharing/64/profiling"),
-        "temporal-sharing-128": BenchmarkResult(directory="./output/e2e/temporal_sharing/128/profiling"),
-        "temporal-sharing-512": BenchmarkResult(directory="./output/e2e/temporal_sharing/512/profiling"),
+        # "temporal-sharing-64": BenchmarkResult(directory="./output/e2e/temporal_sharing/64/profiling"),
+        # "temporal-sharing-128": BenchmarkResult(directory="./output/e2e/temporal_sharing/128/profiling"),
+        # "temporal-sharing-512": BenchmarkResult(directory="./output/e2e/temporal_sharing/512/profiling"),
         "vllm-25pct": BenchmarkResult(directory="./output/vllm"),
         "vllm-50pct": BenchmarkResult(directory="./output/vllm"),
         "vllm-75pct": BenchmarkResult(directory="./output/vllm"),
@@ -292,8 +302,12 @@ def parse_benchmark_data():
                 if "vllm" not in experiment_type and "llama-factory" not in experiment_type:
                     num_warmups = 10 if "coserving" in experiment_type else 0
                     # Process FlexLLM data
+                    
                     filepath = os.path.join(data[experiment_type].directory, 
-                                          f"inference_request_profiling_sharegpt_8192_{qps}_qps_{model_}_tensor_parallelism_{tp_degree}_max_requests_per_batch_256_max_tokens_per_batch_256_num_kv_cache_slots_{kv_cache_slots}_qps_0.000000_num_warmup_requests_{num_warmups}.csv")
+                        f"inference_request_profiling_sharegpt_{model_}_tensor_parallelism_{tp_degree}_max_requests_per_batch_256_max_tokens_per_batch_256_num_kv_cache_slots_{kv_cache_slots}_qps_0.000000_num_warmup_requests_{num_warmups}.csv")
+
+                    # filepath = os.path.join(data[experiment_type].directory, 
+                    #                       f"inference_request_profiling_sharegpt_8192_{qps}_qps_{model_}_tensor_parallelism_{tp_degree}_max_requests_per_batch_256_max_tokens_per_batch_256_num_kv_cache_slots_{kv_cache_slots}_qps_0.000000_num_warmup_requests_{num_warmups}.csv")
 
                     if os.path.exists(filepath):
                         df = pd.read_csv(filepath)
@@ -312,7 +326,10 @@ def parse_benchmark_data():
                     
                     # Process finetuning data
                     step_filepath = os.path.join(data[experiment_type].directory, 
-                                               f"step_profiling_sharegpt_8192_{qps}_qps_{model_}_tensor_parallelism_{tp_degree}_max_requests_per_batch_256_max_tokens_per_batch_256_num_kv_cache_slots_{kv_cache_slots}_qps_0.000000_num_warmup_requests_{num_warmups}.csv")
+                        f"step_profiling_sharegpt_{model_}_tensor_parallelism_{tp_degree}_max_requests_per_batch_256_max_tokens_per_batch_256_num_kv_cache_slots_{kv_cache_slots}_qps_0.000000_num_warmup_requests_{num_warmups}.csv")
+
+                    # step_filepath = os.path.join(data[experiment_type].directory, 
+                    #                            f"step_profiling_sharegpt_8192_{qps}_qps_{model_}_tensor_parallelism_{tp_degree}_max_requests_per_batch_256_max_tokens_per_batch_256_num_kv_cache_slots_{kv_cache_slots}_qps_0.000000_num_warmup_requests_{num_warmups}.csv")
 
                     if os.path.exists(step_filepath):
                         df = pd.read_csv(step_filepath)

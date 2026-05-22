@@ -20,7 +20,7 @@ ZSIZES=(40000)
 NUM_BWD_LAYERS_vals=(2)
 NUM_KV_CACHE_SLOTS_vals=(70000)
 model_types=("llama")
-QPS_vals=(5.0 3.0 1.0)
+QPS_vals=(5.0 4.0 3.0 2.0 1.0)
 
 # Other parameters
 NCPUS=16

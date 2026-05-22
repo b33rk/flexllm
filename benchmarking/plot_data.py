@@ -30,7 +30,7 @@ def create_plots(data, output_folder=None):
     os.makedirs(output_folder, exist_ok=True)
     
     # Configuration
-    models = ["meta-llama/Llama-3.1-8B-Instruct", "Qwen/Qwen2.5-14B-Instruct", "Qwen/Qwen2.5-32B-Instruct"]
+    models = ["meta-llama/Llama-3.1-8B-Instruct"]
     tp_degrees = [1, 2, 4]
     qps_values = [1.0, 3.0, 5.0]
     # qps_values = [1.0, 2.0, 3.0, 4.0, 5.0]
@@ -47,7 +47,7 @@ def create_plots(data, output_folder=None):
     #########################    E2E PLOT    #################################
     ##########################################################################
     fig, axs = plt.subplots(3, 3, figsize=(12, 7))
-    model_names_simplified = ["Llama-3.1-8B-Instruct", "Qwen2.5-14B-Instruct", "Qwen2.5-32B-Instruct"]
+    model_names_simplified = ["Llama-3.1-8B-Instruct"]
     markers = ['o', 's', '^', 'D']  # Different dot types for the 4 curves
 
     for j, model_key in enumerate(model_keys):
@@ -101,7 +101,7 @@ def create_plots(data, output_folder=None):
     ######## E2E comparison with Temporal/Spatial Sharing PLOT    ############
     ##########################################################################
     fig, axs = plt.subplots(3, 3, figsize=(12, 7))
-    model_names_simplified = ["Llama-3.1-8B-Instruct", "Qwen2.5-14B-Instruct", "Qwen2.5-32B-Instruct"]
+    model_names_simplified = ["Llama-3.1-8B-Instruct"]
     markers = ['o', 's', '^', 'D', 'v', 'p']  # Different dot types for the 6 curves
 
     for j, model_key in enumerate(model_keys):
@@ -111,7 +111,7 @@ def create_plots(data, output_folder=None):
         
         # Row 0: SLO Attainment
         ax = axs[0, j]
-        for idx, exp in enumerate(["coserving", "temporal-sharing-64", "temporal-sharing-128", "temporal-sharing-512", "spatial-sharing"]):
+        for idx, exp in enumerate(["coserving", "spatial-sharing"]):
             slo_values = data[exp].slo_attainments[model_key]
             ax.plot(arrival_rates, slo_values, marker=markers[idx], label=exp if j == 0 else None)
         ax.set_xticks(arrival_rates)
@@ -123,7 +123,7 @@ def create_plots(data, output_folder=None):
         
         # Row 1: Finetuning Throughput
         ax = axs[1, j]
-        for idx, exp in enumerate(["coserving", "temporal-sharing-64", "temporal-sharing-128", "temporal-sharing-512", "spatial-sharing"]):
+        for idx, exp in enumerate(["coserving", "spatial-sharing"]):
             throughput_values = [4*x for x in data[exp].finetuning_throughputs[model_key]]
             ax.plot(arrival_rates, throughput_values, marker=markers[idx], label=exp if j == 0 else None)
             print(f"Finetuning throughput - {exp} - {model_key}: {throughput_values}")
@@ -136,7 +136,7 @@ def create_plots(data, output_folder=None):
 
         # Row 2: Inference Throughput
         ax = axs[2, j]
-        for idx, exp in enumerate(["coserving", "temporal-sharing-64", "temporal-sharing-128", "temporal-sharing-512", "spatial-sharing"]):
+        for idx, exp in enumerate(["coserving", "spatial-sharing"]):
             throughput_values = [4*x for x in data[exp].inference_throughputs[model_key]]
             ax.plot(arrival_rates, throughput_values, marker=markers[idx], label=exp if j == 0 else None)
         ax.set_xticks(arrival_rates)
@@ -149,7 +149,7 @@ def create_plots(data, output_folder=None):
 
     # Add one common legend below the whole plot using handles from the first column
     handles, labels = axs[0, 0].get_legend_handles_labels()
-    fig.legend(handles, ["Co-serving", "Temporal Sharing (freq=64)", "Temporal Sharing (freq=128)", "Temporal Sharing (freq=512)", "Spatial Sharing"],
+    fig.legend(handles, ["Co-serving", "Spatial Sharing"],
                loc="upper center", fontsize=12, ncol=3)
     plt.savefig(os.path.join(output_folder, "internal_baselines.pdf"), dpi=300, bbox_inches='tight')
 
