@@ -32,8 +32,8 @@ def create_plots(data, output_folder=None):
     # Configuration
     models = ["meta-llama/Llama-3.1-8B-Instruct"]
     tp_degrees = [1, 2, 4]
-    qps_values = [1.0, 3.0, 5.0]
-    # qps_values = [1.0, 2.0, 3.0, 4.0, 5.0]
+    # qps_values = [1.0, 3.0, 5.0]
+    qps_values = [1.0, 2.0, 3.0, 4.0, 5.0]
     tpot_slos_ms = [45, 75, 75]
     ttft_slos_ms = [5000, 5000, 5000]
     
