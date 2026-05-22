@@ -192,6 +192,7 @@ export LEGION_BACKTRACE=1
     --max-sequence-length 8192 \
     --num-kv-cache-slots 40000 \
     --ignore-eos --warmup --log-instance-creation \
+    -enable-peft
     2>&1 > "$LOG_FILE"
 
 check_output_file "${OUTPUT_FOLDER}/output/coserving.json"
