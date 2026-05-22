@@ -170,6 +170,7 @@ run_experiment() {
         --max-sequence-length "$MAX_SEQ_LEN" \
         --num-kv-cache-slots "$NUM_KV_CACHE_SLOTS" \
         --ignore-eos --log-instance-creation \
+        -enable-peft
         2>&1 | tee "$LOG_FILE"
     
     echo "Completed experiment for $MODEL_NAME with QPS=$qps"

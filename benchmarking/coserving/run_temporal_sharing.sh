@@ -175,6 +175,7 @@ run_experiment() {
         --max-sequence-length $MAX_SEQ_LEN \
         --num-kv-cache-slots $NUM_KV_CACHE_SLOTS \
         --ignore-eos --log-instance-creation \
+        -enable-peft
         2>&1 | tee "$LOG_FILE"
     
     echo "Completed experiment ${experiment_num}: $MODEL_NAME with TSF=$temporal_sharing_frequency, QPS=$qps"
