@@ -175,7 +175,7 @@ mkdir -p "$OUTPUT_FOLDER/profiling"
 export LEGION_BACKTRACE=1
 ./inference/flexllm/peft_train \
     -ll:cpu 16 -ll:gpu 2 -ll:util 16 \
-    -ll:fsize 38000 -ll:zsize 40000 -ll:csize 4096 \
+    -ll:fsize 70000 -ll:zsize 40000 -ll:csize 4096 \
     -llm-model meta-llama/Llama-3.1-8B-Instruct --fusion \
     -tensor-parallelism-degree 2 \
     -prompt "$kickstart_trace_file" \
