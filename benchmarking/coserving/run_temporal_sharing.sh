@@ -37,6 +37,7 @@ QPS_vals=(5.0 3.0 1.0)
 TEMPORAL_SHARING_FREQUENCIES=(64 128 512)
 
 export LEGION_BACKTRACE=1
+export CUDA_VISIBLE_DEVICES=3
 
 # compute dimensions
 model_count=${#MODEL_NAMES[@]}

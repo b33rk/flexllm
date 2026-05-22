@@ -47,6 +47,7 @@ mkdir -p "$OUTPUT_FOLDER/logs"
 mkdir -p "$OUTPUT_FOLDER/profiling"
 
 export LEGION_BACKTRACE=1
+export CUDA_VISIBLE_DEVICES=2
 # Optionally, uncomment these for further debugging:
 # export TORCH_SHOW_CPP_STACKTRACES=1
 # export TORCH_CPP_LOG_LEVEL=INFO
