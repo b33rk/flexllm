@@ -18,7 +18,8 @@ MODEL_NAMES=(
 )
 TP_DEGREES=(1 2 4)
 model_types=("llama" "qwen" "qwen")
-QPS_vals=(5.0 4.0 3.0 2.0 1.0)
+QPS_vals=(5.0 3.0 1.0)
+# QPS_vals=(5.0 4.0 3.0 2.0 1.0)
 TEMPORAL_SHARING_FREQUENCIES=(64 128 512)
 
 # Parameters specific to each mode

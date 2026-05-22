@@ -235,7 +235,8 @@ def parse_benchmark_data():
     llama_factory_model_names = ["t1_llama_8B/lora/sft", "t1_qwen_14B/lora/sft", "t1_qwen_32B/lora/sft"]
     tp_degrees = [1, 2, 4]
     kv_cache_slots_values = [70000, 70000, 60000]
-    qps_values = [1.0, 2.0, 3.0, 4.0, 5.0]
+    qps_values = [1.0, 3.0, 5.0]
+    # qps_values = [1.0, 2.0, 3.0, 4.0, 5.0]
     tpot_slos_ms = [45, 75, 75]
     ttft_slos_ms = [5000, 5000, 5000]
 
