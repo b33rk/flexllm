@@ -7,7 +7,7 @@ set -o pipefail
 cd "$(dirname "$0")"
 SCRIPT_DIR=$(pwd)
 
-VLLM_V1=1
+VLLM_V1=0
 EAGER_MODE=true
 MODEL_NAMES=("meta-llama/Llama-3.1-8B-Instruct")
 TP_DEGREES=(1)
