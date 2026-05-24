@@ -111,7 +111,7 @@ def create_plots(data, output_folder=None):
         
         # Row 0: SLO Attainment
         ax = axs[0, j]
-        for idx, exp in enumerate(["coserving", "spatial-sharing"]):
+        for idx, exp in enumerate(["coserving"]):
             slo_values = data[exp].slo_attainments[model_key]
             ax.plot(arrival_rates, slo_values, marker=markers[idx], label=exp if j == 0 else None)
         ax.set_xticks(arrival_rates)
@@ -123,7 +123,7 @@ def create_plots(data, output_folder=None):
         
         # Row 1: Finetuning Throughput
         ax = axs[1, j]
-        for idx, exp in enumerate(["coserving", "spatial-sharing"]):
+        for idx, exp in enumerate(["coserving"]):
             throughput_values = [4*x for x in data[exp].finetuning_throughputs[model_key]]
             ax.plot(arrival_rates, throughput_values, marker=markers[idx], label=exp if j == 0 else None)
             print(f"Finetuning throughput - {exp} - {model_key}: {throughput_values}")
@@ -136,7 +136,7 @@ def create_plots(data, output_folder=None):
 
         # Row 2: Inference Throughput
         ax = axs[2, j]
-        for idx, exp in enumerate(["coserving", "spatial-sharing"]):
+        for idx, exp in enumerate(["coserving"]):
             throughput_values = [4*x for x in data[exp].inference_throughputs[model_key]]
             ax.plot(arrival_rates, throughput_values, marker=markers[idx], label=exp if j == 0 else None)
         ax.set_xticks(arrival_rates)

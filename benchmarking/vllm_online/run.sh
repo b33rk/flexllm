@@ -13,18 +13,13 @@ MODEL_NAMES=("meta-llama/Llama-3.1-8B-Instruct")
 TP_DEGREES=(1)
 model_types=("llama")
 QPS_vals=(
-  6.7 # 20/3
-  5.3 # 16/3
-  2.7 # 8/3
-  1.3 # 4/3
-  20.0
-  16.0
-  12.0
-  10.0
-  8.0
-  6.0
   4.0
+  3.0
   2.0
+  1.3 # 4/3
+  1.0
+  0.7
+  0.5
 )
 trace=sharegpt
 BATCH_SIZE=256
@@ -33,7 +28,6 @@ MAX_NUM_REQUESTS=5000
 MAX_SEQ_LEN=8192
 
 check_gpus() {
-  # check the number of GPUs and GPU type.
   declare -g gpu_count=$(nvidia-smi --list-gpus | wc -l)
   if [[ $gpu_count -gt 0 ]]; then
     echo "GPU found."
@@ -48,7 +42,7 @@ check_gpus() {
 wait_for_server() {
   local max_attempts=120  # 120 * 10 seconds = 1200 seconds
   local attempt=0
-  
+
   while [ $attempt -lt $max_attempts ]; do
     if curl -s -X POST localhost:8000/v1/completions >/dev/null 2>&1; then
       return 0
@@ -62,18 +56,15 @@ wait_for_server() {
 kill_gpu_processes() {
   lsof -t -i:8000 | xargs -r kill -9
   pgrep python3 | xargs -r kill -9
-  pgrep python | xargs -r kill -9
-  pgrep vllm | xargs -r kill -9
-
+  pgrep python  | xargs -r kill -9
+  pgrep vllm    | xargs -r kill -9
 
   # wait until GPU memory usage smaller than 1GB
   while [ "$(nvidia-smi --query-gpu=memory.used --format=csv,noheader,nounits | head -n 1)" -ge 1000 ]; do
     sleep 1
   done
 
-  # remove vllm config file
   rm -rf ~/.config/vllm
-
 }
 
 cleanup() {
@@ -95,44 +86,49 @@ run_serving_tests() {
   local trace=${9}
   local trace_file=${10}
 
-  # if the max_num_batched_tokens is less than the batch_size, return
   if [ "$max_num_batched_tokens" -lt "$batch_size" ]; then
     echo "max_num_batched_tokens is less than batch_size, skipping this test."
     return
   fi
 
-  server_command="VLLM_USE_V1=${vllm_use_v1} vllm serve ${model_name} \
+  # V100 (SM 7.0) does not support Flash-Attention 2 or BF16 tensor cores.
+  # Force xformers backend and FP16.
+  server_command="VLLM_USE_V1=${vllm_use_v1} VLLM_ATTENTION_BACKEND=XFORMERS vllm serve ${model_name} \
       --tensor-parallel-size ${tp_degree} \
+      --dtype float16 \
+      --max-model-len ${MAX_SEQ_LEN} \
+      --gpu-memory-utilization 0.92 \
       --enable-chunked-prefill \
       --max-num-seqs ${batch_size} \
       --max-num-batched-tokens ${max_num_batched_tokens} \
       --disable-log-stats \
       --disable-log-requests \
       --swap-space 0"
-  
+
   if [ "$eager_mode" = true ]; then
     server_command+=" --enforce-eager"
   fi
+
   echo "Starting VLLM server"
   echo "Server command: $server_command"
   bash -c "$server_command" &
   server_pid=$!
 
-  # wait until the server is alive
   if wait_for_server; then
     echo ""
     echo "vllm server is up and running."
   else
     echo ""
     echo "vllm failed to start within the timeout period."
+    kill -9 $server_pid 2>/dev/null
+    kill_gpu_processes
+    return 1
   fi
 
   mkdir -p ../../output/vllm
 
-  # Construct the result filename and convert it to lowercase.
-  result_filename=$(echo "results_${trace}_$( [ "$eager_mode" = true ] && echo "eager_" )$( [ "$vllm_use_v1" = 1 ] && echo "v1_" )${model_name//\//_}_bz_${batch_size}_max_num_batched_tokens_${max_num_batched_tokens}_${qps}_qps_.json" | tr '[:upper:]' '[:lower:]')
+  result_filename=$(echo "results_${trace}_$( [ "$eager_mode" = true ] && echo "eager_" )$( [ "$vllm_use_v1" = 1 ] && echo "v1_" )${model_name//\//_}_bz_${batch_size}_max_num_batched_tokens_${max_num_batched_tokens}_${qps}_qps_v100_.json" | tr '[:upper:]' '[:lower:]')
 
-  # Build the client command with the result_filename variable.
   client_command="VLLM_USE_V1=${vllm_use_v1} python3 benchmark_vllm.py \
         --model ${model_name} \
         --backend vllm \
@@ -146,7 +142,6 @@ run_serving_tests() {
   echo "Client command: $client_command"
   bash -c "$client_command"
 
-  # clean up
   kill -9 $server_pid
   kill_gpu_processes
 }
@@ -157,10 +152,12 @@ main() {
     (which jq) || (apt-get update && apt-get -y install jq)
     (which lsof) || (apt-get update && apt-get install -y lsof)
 
-    # get the current IP address, required by benchmark_serving.py
     export VLLM_HOST_IP=$(hostname -I | awk '{print $1}')
-    # turn of the reporting of the status of each request, to clean up the terminal output
     export VLLM_LOG_LEVEL="WARNING"
+
+    # Pin to a single GPU so the 4-way V100 box runs one experiment at a time.
+    # Change to 0,1 / 0,1,2,3 if you bump TP_DEGREES to 2 or 4.
+    export CUDA_VISIBLE_DEVICES=0
 
     for i in "${!MODEL_NAMES[@]}"; do
         for qps in "${QPS_vals[@]}"; do
@@ -168,7 +165,6 @@ main() {
             tp_degree="${TP_DEGREES[$i]}"
             MODEL_TYPE=${model_types[$i]}
             trace_file="../../traces/burstgpt/${MODEL_TYPE}/${trace}_${MAX_SEQ_LEN}_${qps}_qps.json"
-            # Check if the trace file exists
             if [ ! -f "$trace_file" ]; then
               echo "Error: Trace file $trace_file does not exist!"
               exit 1
@@ -177,8 +173,7 @@ main() {
         done
     done
 
-  echo "All experiments completed!"
-
+    echo "All experiments completed!"
 }
 
 main
