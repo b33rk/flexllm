@@ -13,13 +13,18 @@ MODEL_NAMES=("meta-llama/Llama-3.1-8B-Instruct")
 TP_DEGREES=(1)
 model_types=("llama")
 QPS_vals=(
-  4.0
-  3.0
-  2.0
+  6.7 # 20/3
+  5.3 # 16/3
+  2.7 # 8/3
   1.3 # 4/3
-  1.0
-  0.7
-  0.5
+  20.0
+  16.0
+  12.0
+  10.0
+  8.0
+  6.0
+  4.0
+  2.0
 )
 trace=sharegpt
 BATCH_SIZE=256
