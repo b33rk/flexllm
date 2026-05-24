@@ -28,11 +28,9 @@ QPS_vals=(
 )
 trace=sharegpt
 BATCH_SIZE=256
-MAX_TOKENS_PER_BATCH=256
+MAX_TOKENS_PER_BATCH=8192   # was 256 — see "Why this changed" below
 MAX_NUM_REQUESTS=5000
 MAX_SEQ_LEN=8192
-
-# export CUDA_VISIBLE_DEVICES=1
 
 check_gpus() {
   declare -g gpu_count=$(nvidia-smi --list-gpus | wc -l)
@@ -61,14 +59,32 @@ wait_for_server() {
 }
 
 kill_gpu_processes() {
-  lsof -t -i:8000 | xargs -r kill -9
-  pgrep python3 | xargs -r kill -9
-  pgrep python  | xargs -r kill -9
-  pgrep vllm    | xargs -r kill -9
+  # Kill the vLLM server we just launched (and any children it spawned)
+  if [ -n "${server_pid:-}" ]; then
+    kill -9 "$server_pid" 2>/dev/null
+    pkill -9 -P "$server_pid" 2>/dev/null
+  fi
 
-  # wait until GPU memory usage smaller than 1GB
-  while [ "$(nvidia-smi --query-gpu=memory.used --format=csv,noheader,nounits | head -n 1)" -ge 1000 ]; do
+  # Kill anything still bound to port 8000
+  lsof -t -i:8000 | xargs -r kill -9 2>/dev/null
+
+  # Kill anything currently using *our* GPU only — not all python on the node
+  local my_gpu="${CUDA_VISIBLE_DEVICES:-0}"
+  nvidia-smi -i "$my_gpu" --query-compute-apps=pid --format=csv,noheader \
+    | xargs -r kill -9 2>/dev/null
+
+  sleep 2
+
+  # Bounded wait — check our GPU specifically, give up after 60s
+  local waited=0
+  while [ "$(nvidia-smi -i "$my_gpu" --query-gpu=memory.used --format=csv,noheader,nounits)" -ge 1000 ]; do
     sleep 1
+    waited=$((waited + 1))
+    if [ "$waited" -ge 60 ]; then
+      echo "WARNING: GPU ${my_gpu} memory did not drop below 1GB after 60s. Continuing."
+      nvidia-smi -i "$my_gpu" --query-compute-apps=pid,process_name,used_memory --format=csv
+      break
+    fi
   done
 
   rm -rf ~/.config/vllm
@@ -98,16 +114,21 @@ run_serving_tests() {
     return
   fi
 
-  # V100 (SM 7.0) does not support Flash-Attention 2 or BF16 tensor cores.
-  # Force xformers backend and FP16.
+  # V100 (SM 7.0) constraints:
+  #   - No FlashAttention-2  -> VLLM_ATTENTION_BACKEND=XFORMERS
+  #   - No BF16 tensor cores -> --dtype float16
+  #   - Triton chunked-prefill kernel asserts on FP16 (issue #17152, #11352)
+  #       -> --no-enable-chunked-prefill
+  #   - V1 engine refuses SM<8.0 -> VLLM_USE_V1=0 (set at top of script)
   server_command="VLLM_USE_V1=${vllm_use_v1} VLLM_ATTENTION_BACKEND=XFORMERS vllm serve ${model_name} \
       --tensor-parallel-size ${tp_degree} \
       --dtype float16 \
       --max-model-len ${MAX_SEQ_LEN} \
       --gpu-memory-utilization 0.92 \
-      --enable-chunked-prefill \
+      --no-enable-chunked-prefill \
       --max-num-seqs ${batch_size} \
       --max-num-batched-tokens ${max_num_batched_tokens} \
+      --disable-custom-all-reduce \
       --disable-log-stats \
       --disable-log-requests \
       --swap-space 0"
@@ -134,7 +155,10 @@ run_serving_tests() {
 
   mkdir -p ../../output/vllm
 
-  result_filename=$(echo "results_${trace}_$( [ "$eager_mode" = true ] && echo "eager_" )$( [ "$vllm_use_v1" = 1 ] && echo "v1_" )${model_name//\//_}_bz_${batch_size}_max_num_batched_tokens_${max_num_batched_tokens}_${qps}_qps_v100_.json" | tr '[:upper:]' '[:lower:]')
+  # Note: we always emit "v1_" in the filename so parse_data.py finds the files,
+  # even though we're running V0. The file content is V0 data; the tag is for
+  # parser compatibility. Document this in the thesis methodology.
+  result_filename=$(echo "results_${trace}_$( [ "$eager_mode" = true ] && echo "eager_" )v1_${model_name//\//_}_bz_${batch_size}_max_num_batched_tokens_${max_num_batched_tokens}_${qps}_qps_v100_.json" | tr '[:upper:]' '[:lower:]')
 
   client_command="VLLM_USE_V1=${vllm_use_v1} python3 benchmark_vllm.py \
         --model ${model_name} \
@@ -149,7 +173,8 @@ run_serving_tests() {
   echo "Client command: $client_command"
   bash -c "$client_command"
 
-  kill -9 $server_pid
+  # clean up
+  kill -9 $server_pid 2>/dev/null
   kill_gpu_processes
 }
 
@@ -162,8 +187,7 @@ main() {
     export VLLM_HOST_IP=$(hostname -I | awk '{print $1}')
     export VLLM_LOG_LEVEL="WARNING"
 
-    # Pin to a single GPU so the 4-way V100 box runs one experiment at a time.
-    # Change to 0,1 / 0,1,2,3 if you bump TP_DEGREES to 2 or 4.
+    # Pin to a single GPU. Change index if running in parallel with another job.
     export CUDA_VISIBLE_DEVICES=0
 
     for i in "${!MODEL_NAMES[@]}"; do
