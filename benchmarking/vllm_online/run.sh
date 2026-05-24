@@ -29,7 +29,7 @@ QPS_vals=(
 )
 trace=sharegpt
 BATCH_SIZE=8
-MAX_TOKENS_PER_BATCH=1024
+MAX_TOKENS_PER_BATCH=8192
 MAX_NUM_REQUESTS=5000
 MAX_SEQ_LEN=8192
 
@@ -126,7 +126,7 @@ run_serving_tests() {
       --dtype float16 \
       --max-model-len ${MAX_SEQ_LEN} \
       --gpu-memory-utilization 0.92 \
-      --max-num-seqs ${batch_size} \
+      --max-num-seqs 4 \
       --max-num-batched-tokens ${max_num_batched_tokens} \
       --disable-custom-all-reduce \
       --disable-log-stats \
