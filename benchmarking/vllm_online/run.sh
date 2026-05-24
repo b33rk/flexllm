@@ -7,6 +7,7 @@ set -o pipefail
 cd "$(dirname "$0")"
 SCRIPT_DIR=$(pwd)
 
+VLLM_CHUNKED_PREFILL_ENABLED=0
 VLLM_V1=0
 EAGER_MODE=true
 MODEL_NAMES=("meta-llama/Llama-3.1-8B-Instruct")
@@ -125,7 +126,6 @@ run_serving_tests() {
       --dtype float16 \
       --max-model-len ${MAX_SEQ_LEN} \
       --gpu-memory-utilization 0.92 \
-      --no-enable-chunked-prefill \
       --max-num-seqs ${batch_size} \
       --max-num-batched-tokens ${max_num_batched_tokens} \
       --disable-custom-all-reduce \
