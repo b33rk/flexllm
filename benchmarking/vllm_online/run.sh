@@ -7,7 +7,7 @@ set -o pipefail
 cd "$(dirname "$0")"
 SCRIPT_DIR=$(pwd)
 
-VLLM_CHUNKED_PREFILL_ENABLED=0
+export VLLM_CHUNKED_PREFILL_ENABLED=0
 VLLM_V1=0
 EAGER_MODE=true
 MODEL_NAMES=("meta-llama/Llama-3.1-8B-Instruct")
@@ -29,7 +29,7 @@ QPS_vals=(
 )
 trace=sharegpt
 BATCH_SIZE=256
-MAX_TOKENS_PER_BATCH=8192   # was 256 — see "Why this changed" below
+MAX_TOKENS_PER_BATCH=2048
 MAX_NUM_REQUESTS=5000
 MAX_SEQ_LEN=8192
 
