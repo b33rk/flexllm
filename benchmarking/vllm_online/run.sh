@@ -31,7 +31,7 @@ trace=sharegpt
 BATCH_SIZE=256
 MAX_TOKENS_PER_BATCH=2048
 MAX_NUM_REQUESTS=5000
-MAX_SEQ_LEN=8192
+MAX_SEQ_LEN=2048
 
 check_gpus() {
   declare -g gpu_count=$(nvidia-smi --list-gpus | wc -l)
